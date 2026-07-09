@@ -1,0 +1,47 @@
+{
+  "name": "vite-plugin-sinwan",
+  "version": "0.1.1",
+  "description": "Vite plugin for Sinwan",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "keywords": [
+    "sinwan",
+    "reactive",
+    "ui",
+    "ssr",
+    "hydration",
+    "jsx",
+    "signals",
+    "components",
+    "framework",
+    "bun"
+  ],
+  "author": "Mohammed Ben Cheikh",
+  "license": "MIT",
+  "bugs": "https://github.com/sinwanjs/sinwan/issues",
+  "homepage": "https://sinwanjs.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sinwanjs/sinwan",
+    "directory": "packages/vite-plugin-sinwan"
+  },
+  "bin": {
+    "sinwan": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "bun run build.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.24.0",
+    "sinwan-compiler": "file:../sinwan-compiler"
+  },
+  "peerDependencies": {
+    "typescript": "^5",
+    "vite": "^5"
+  }
+}
