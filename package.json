@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-sinwan",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Vite plugin for sinwan",
   "type": "module",
   "main": "./dist/index.js",
