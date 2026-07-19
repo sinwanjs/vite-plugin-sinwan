@@ -1,10 +1,10 @@
 # vite-plugin-sinwan
 
-Official Vite plugin for the Sinwan UI framework. Provides JSX compilation.
+Vite plugin for [Sinwan](https://sinwanjs.com) — JSX transformation with template hoisting, reactive expression wrapping, and plugin-free Fast Refresh powered by `sinwan-compiler`.
 
-## Installation
+## Install
 
-```bash
+```sh
 bun add -d vite-plugin-sinwan
 ```
 
@@ -20,39 +20,44 @@ export default defineConfig({
 });
 ```
 
-## `sinwan(options?)`
-
-Single plugin that handles JSX compilation.
-
-### Options
-
-| Option  | Type      | Default | Description                                   |
-| ------- | --------- | ------- | --------------------------------------------- |
-| `hoist` | `boolean` | `true`  | Enable template hoisting in the JSX transform |
-
-### Simple usage patterns
+## Options
 
 ```ts
-// JSX transform only (default)
-sinwan();
+sinwan({
+  // Enable template hoisting (default: true)
+  hoist: true,
+  // Emit explicit binding descriptors (default: false)
+  explicitBindings: false,
+  // Path to reactive-props metadata from `sinwan analyze`
+  analyze: "./.sinwan/props.json",
+  // Incremental cross-file analysis for dev/HMR
+  cache: {
+    root: process.cwd(),
+    tsConfigPath: "./tsconfig.json",
+    cachePath: "./.sinwan/cache.json",
+    bunfigPath: "./bunfig.toml",
+  },
+  // Plugin-free Fast Refresh (default: true, dev server only)
+  fastRefresh: true,
+});
 ```
+
+| Option             | Type                            | Default     | Description                                           |
+| ------------------ | ------------------------------- | ----------- | ----------------------------------------------------- |
+| `hoist`            | `boolean`                       | `true`      | Hoist static DOM to module-level templates            |
+| `explicitBindings` | `boolean`                       | `false`     | Emit compiler-driven binding descriptors              |
+| `analyze`          | `string`                        | `undefined` | Path to reactive-props metadata from `sinwan analyze` |
+| `cache`            | `boolean \| SinwanCacheOptions` | `false`     | Enable incremental in-memory cross-file analysis      |
+| `fastRefresh`      | `boolean`                       | `true`      | Inject per-component HMR boundaries (dev server only) |
 
 ## How it works
 
-### JSX compilation
+- Runs with `enforce: "pre"` so it executes before any other transform
+- Static DOM elements are hoisted to module-level template objects
+- Dynamic expressions are wrapped in zero-arity functions for fine-grained reactivity
+- Component calls (capitalised tags) are left for the runtime
+- Fast Refresh injects per-component HMR boundaries in `vite serve` — no extra plugin needed
 
-Runs with `enforce: "pre"` so it executes before any other transform.
+## License
 
-- Static DOM elements are hoisted to module-level template objects.
-- Dynamic expressions are replaced with `_$createTemplate` calls.
-- Component calls (capitalised tags) are left untouched for the runtime.
-
-## Type-check & test
-
-```bash
-# Type-check the plugin source
-npx tsc --noEmit
-
-# Run the test suite
-bun test
-```
+MIT © Mohammed Ben Cheikh

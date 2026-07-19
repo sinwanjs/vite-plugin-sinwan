@@ -1,7 +1,7 @@
 {
   "name": "vite-plugin-sinwan",
   "version": "0.1.1",
-  "description": "Vite plugin for Sinwan",
+  "description": "Vite plugin for sinwan",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -20,12 +20,11 @@
   ],
   "author": "Mohammed Ben Cheikh",
   "license": "MIT",
-  "bugs": "https://github.com/sinwanjs/sinwan/issues",
+  "bugs": "https://github.com/sinwanjs/vite-plugin-sinwan/issues",
   "homepage": "https://sinwanjs.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/sinwanjs/sinwan",
-    "directory": "packages/vite-plugin-sinwan"
+    "url": "https://github.com/sinwanjs/vite-plugin-sinwan"
   },
   "bin": {
     "sinwan": "./dist/cli.js"
@@ -38,7 +37,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",
-    "sinwan-compiler": "file:../sinwan-compiler"
+    "sinwan-compiler": "^0.1.0"
   },
   "peerDependencies": {
     "typescript": "^5",
