@@ -4,7 +4,6 @@
   "description": "Vite plugin for sinwan",
   "type": "module",
   "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "keywords": [
     "sinwan",
@@ -33,7 +32,8 @@
     "build": "bun run build.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "typescript": "^5"
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",
