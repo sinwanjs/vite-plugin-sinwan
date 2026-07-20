@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-sinwan",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Vite plugin for sinwan",
   "type": "module",
   "main": "./dist/index.js",
@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.24.0",
-    "sinwan-compiler": "^0.2.2"
+    "sinwan-compiler": "^0.2.3"
   },
   "peerDependencies": {
     "typescript": "^5",
