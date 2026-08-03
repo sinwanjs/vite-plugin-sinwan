@@ -19,7 +19,7 @@ export type SinwanCacheOptions =
 export interface SinwanOptions {
   /** Enable template hoisting (default: true) */
   hoist?: boolean;
-  /** Emit explicit compiler-driven binding descriptors (Phase 2, default: false). */
+  /** Emit explicit compiler-driven binding descriptors (default: true). */
   explicitBindings?: boolean;
   /** Path to the reactive-props metadata file produced by `sinwan analyze`. */
   analyze?: string;
@@ -27,6 +27,8 @@ export interface SinwanOptions {
    * Enable incremental in-memory cross-file analysis for dev/HMR. When true,
    * the plugin analyzes each transformed file and passes the current metadata
    * to the transform without requiring a separate `sinwan analyze` step.
+   * Default: true (in-memory only; set to `false` to disable, or pass an object
+   * to configure root/paths and persistent cache).
    */
   cache?: SinwanCacheOptions;
   /**
@@ -39,12 +41,16 @@ export interface SinwanOptions {
 }
 
 const DEFAULT_SINWAN_OPTIONS: Required<
-  Pick<SinwanOptions, "hoist" | "explicitBindings" | "fastRefresh" | "analyze">
+  Pick<
+    SinwanOptions,
+    "hoist" | "explicitBindings" | "fastRefresh" | "analyze" | "cache"
+  >
 > = {
   hoist: true,
   explicitBindings: false,
   fastRefresh: true,
   analyze: undefined as any,
+  cache: true,
 };
 
 /**
@@ -111,8 +117,10 @@ export function sinwan(options: SinwanOptions = {}) {
         result = transformJSX(code, id, {
           hoist: opts.hoist,
           explicitBindings: opts.explicitBindings,
+          dev: process.env.NODE_ENV !== "production",
           analyze: opts.analyze,
           analyzeMetadata: cache ? cache.reactiveProps : undefined,
+          resolveImport: cache ? cache.resolve : undefined,
         });
       }
 
