@@ -79,6 +79,18 @@ export function sinwan(options: SinwanOptions = {}) {
     name: "sinwan",
     enforce: "pre",
 
+    /**
+     * Same role as Vite's `resolve.dedupe` for React: linked `file:` / `link:`
+     * packages that depend on `sinwan` must share the app's runtime.
+     */
+    config() {
+      return {
+        resolve: {
+          dedupe: ["sinwan"],
+        },
+      };
+    },
+
     configResolved(config: any) {
       isServe = config?.command === "serve";
       projectRoot = config?.root;

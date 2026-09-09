@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-sinwan",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Vite plugin for sinwan",
   "author": "Mohammed Ben Cheikh",
   "license": "MIT",
@@ -36,7 +36,7 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "sinwan-compiler": "^0.2.4"
+    "sinwan-compiler": "^0.2.5"
   },
   "peerDependencies": {
     "typescript": "^5",

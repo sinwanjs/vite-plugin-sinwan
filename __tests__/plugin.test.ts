@@ -6,7 +6,9 @@ describe("sinwan vite plugin", () => {
     const plugin = sinwan({ cache: true });
     expect(plugin.name).toBe("sinwan");
     expect(typeof plugin.configResolved).toBe("function");
+    expect(typeof plugin.config).toBe("function");
     expect(typeof plugin.transform).toBe("function");
+    expect(plugin.config()).toEqual({ resolve: { dedupe: ["sinwan"] } });
   });
 
   it("can be created with a custom cache root", () => {
