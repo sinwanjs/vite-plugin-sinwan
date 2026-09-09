@@ -8,6 +8,14 @@ Vite plugin for [Sinwan](https://sinwanjs.com) — JSX transformation with templ
 bun add -d vite-plugin-sinwan
 ```
 
+## Compiler updates
+
+The plugin depends on `sinwan-compiler` with `>=0.2.5 <1.0.0` and does not bundle it. Publishing a new 0.x compiler does **not** require a plugin release.
+
+- New installs resolve the newest compatible compiler automatically.
+- Existing apps keep a lockfile pin until they run `bun update sinwan-compiler`.
+- Republish this plugin only when the plugin API itself changes, or when `sinwan-compiler` reaches 1.0.
+
 ## Usage
 
 ```ts

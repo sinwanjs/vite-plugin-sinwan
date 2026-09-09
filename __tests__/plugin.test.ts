@@ -1,4 +1,6 @@
 import { describe, it, expect } from "bun:test";
+import * as fs from "fs";
+import * as path from "path";
 import { sinwan } from "../src/index";
 
 describe("sinwan vite plugin", () => {
@@ -28,5 +30,20 @@ describe("sinwan vite plugin", () => {
   it("allows disabling the cache and explicit bindings", () => {
     const plugin = sinwan({ cache: false, explicitBindings: false });
     expect(plugin.name).toBe("sinwan");
+  });
+});
+
+const COMPILER_RANGE = ">=0.2.5 <1.0.0";
+
+describe("sinwan-compiler dependency range", () => {
+  it("accepts any 0.x compiler without a plugin republish", () => {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(import.meta.dir, "..", "package.json"), "utf8"),
+    ) as {
+      dependencies: Record<string, string>;
+      peerDependencies: Record<string, string>;
+    };
+    expect(pkg.dependencies["sinwan-compiler"]).toBe(COMPILER_RANGE);
+    expect(pkg.peerDependencies["sinwan-compiler"]).toBe(COMPILER_RANGE);
   });
 });
