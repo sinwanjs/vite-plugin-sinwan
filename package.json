@@ -1,6 +1,6 @@
 {
   "name": "vite-plugin-sinwan",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "description": "Vite plugin for sinwan",
   "author": "Mohammed Ben Cheikh",
   "license": "MIT",
@@ -29,7 +29,8 @@
     "sinwan": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "test": "bun test --coverage __tests__/plugin.test.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",

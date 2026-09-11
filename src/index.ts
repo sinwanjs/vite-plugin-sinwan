@@ -38,6 +38,20 @@ export interface SinwanOptions {
    * Only active in `vite serve`; never affects production builds.
    */
   fastRefresh?: boolean;
+  /**
+   * Warn when template hoisting is skipped (spreads, enhancer tags, …).
+   * Default: Vite `config.mode !== "production"` after `configResolved`,
+   * otherwise `process.env.NODE_ENV !== "production"` when `sinwan()` runs.
+   */
+  dev?: boolean;
+}
+
+/**
+ * Bracket access so Bun.build cannot fold `process.env.NODE_ENV` into `true`
+ * when this plugin itself is bundled.
+ */
+function defaultCompilerDev(): boolean {
+  return process.env["NODE_ENV"] !== "production";
 }
 
 const DEFAULT_SINWAN_OPTIONS: Required<
@@ -66,6 +80,8 @@ const DEFAULT_SINWAN_OPTIONS: Required<
  */
 export function sinwan(options: SinwanOptions = {}) {
   const opts = { ...DEFAULT_SINWAN_OPTIONS, ...options };
+  const explicitDev = options.dev;
+  let compilerDev = explicitDev ?? defaultCompilerDev();
 
   // Whether we are running the dev server (`vite serve`). Fast Refresh
   // injection only happens here; production builds are never touched.
@@ -94,6 +110,9 @@ export function sinwan(options: SinwanOptions = {}) {
     configResolved(config: any) {
       isServe = config?.command === "serve";
       projectRoot = config?.root;
+      if (explicitDev === undefined && typeof config?.mode === "string") {
+        compilerDev = config.mode !== "production";
+      }
 
       if (opts.cache) {
         const root =
@@ -129,7 +148,7 @@ export function sinwan(options: SinwanOptions = {}) {
         result = transformJSX(code, id, {
           hoist: opts.hoist,
           explicitBindings: opts.explicitBindings,
-          dev: process.env.NODE_ENV !== "production",
+          dev: compilerDev,
           analyze: opts.analyze,
           analyzeMetadata: cache ? cache.reactiveProps : undefined,
           resolveImport: cache ? cache.resolve : undefined,

@@ -34,6 +34,8 @@ export default defineConfig({
 sinwan({
   // Enable template hoisting (default: true)
   hoist: true,
+  // Warn when hoisting is skipped (default: Vite mode !== "production")
+  dev: true,
   // Emit explicit binding descriptors (default: false)
   explicitBindings: false,
   // Path to reactive-props metadata from `sinwan analyze`
@@ -53,6 +55,7 @@ sinwan({
 | Option             | Type                            | Default     | Description                                           |
 | ------------------ | ------------------------------- | ----------- | ----------------------------------------------------- |
 | `hoist`            | `boolean`                       | `true`      | Hoist static DOM to module-level templates            |
+| `dev`              | `boolean`                       | Vite `mode !== "production"` | Warn when template hoisting is skipped |
 | `explicitBindings` | `boolean`                       | `false`     | Emit compiler-driven binding descriptors              |
 | `analyze`          | `string`                        | `undefined` | Path to reactive-props metadata from `sinwan analyze` |
 | `cache`            | `boolean \| SinwanCacheOptions` | `false`     | Enable incremental in-memory cross-file analysis      |
