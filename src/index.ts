@@ -17,6 +17,7 @@ export type SinwanCacheOptions =
     };
 
 export interface SinwanOptions {
+  derivedLocals?: boolean;
   /** Enable template hoisting (default: true) */
   hoist?: boolean;
   /** Emit explicit compiler-driven binding descriptors (default: true). */
@@ -147,6 +148,7 @@ export function sinwan(options: SinwanOptions = {}) {
         }
         result = transformJSX(code, id, {
           hoist: opts.hoist,
+          derivedLocals: opts.derivedLocals,
           explicitBindings: opts.explicitBindings,
           dev: compilerDev,
           analyze: opts.analyze,

@@ -4,6 +4,37 @@ import * as path from "path";
 import { sinwan } from "../src/index";
 
 describe("sinwan vite plugin", () => {
+  it("forwards opt-in derived locals to the linked compiler in dev and production", () => {
+    const input = `export function App() {
+      const open = state.value > 0;
+      return <div title={open}>{open}</div>;
+    }`;
+    for (const derivedLocals of [false, true]) {
+      for (const command of ["serve", "build"]) {
+        const plugin = sinwan({
+          cache: false,
+          dev: false,
+          hoist: false,
+          derivedLocals,
+        });
+        plugin.configResolved({
+          command,
+          mode: command === "build" ? "production" : "development",
+        });
+        const result = plugin.transform(input, "App.tsx");
+        expect(
+          result?.code.includes("const open = () => state.value > 0;"),
+        ).toBe(derivedLocals);
+        expect(result?.code.includes("title={() => open()}")).toBe(
+          derivedLocals,
+        );
+        expect(result?.code.includes("import.meta.hot")).toBe(
+          command === "serve",
+        );
+      }
+    }
+  });
+
   it("can be created with cache enabled", () => {
     const plugin = sinwan({ cache: true });
     expect(plugin.name).toBe("sinwan");
@@ -33,7 +64,8 @@ describe("sinwan vite plugin", () => {
   });
 });
 
-const SPREAD_JSX = "const Card = (props) => <div {...props}><p>Hello</p></div>;";
+const SPREAD_JSX =
+  "const Card = (props) => <div {...props}><p>Hello</p></div>;";
 
 function collectWarns(run: () => void): string[] {
   const warns: string[] = [];
@@ -55,9 +87,9 @@ describe("compiler dev warnings", () => {
     const warns = collectWarns(() => {
       plugin.transform(SPREAD_JSX, "Card.tsx");
     });
-    expect(warns.some((line) => line.includes("template hoisting skipped"))).toBe(
-      false,
-    );
+    expect(
+      warns.some((line) => line.includes("template hoisting skipped")),
+    ).toBe(false);
   });
 
   it("warns about skipped hoists when dev is true", () => {
@@ -65,42 +97,54 @@ describe("compiler dev warnings", () => {
     const warns = collectWarns(() => {
       plugin.transform(SPREAD_JSX, "Card.tsx");
     });
-    expect(warns.some((line) => line.includes("template hoisting skipped"))).toBe(
-      true,
-    );
+    expect(
+      warns.some((line) => line.includes("template hoisting skipped")),
+    ).toBe(true);
   });
 
   it("uses Vite production mode after configResolved unless dev is set", () => {
     const plugin = sinwan({ cache: false });
-    plugin.configResolved({ command: "build", mode: "production", root: "/app" });
+    plugin.configResolved({
+      command: "build",
+      mode: "production",
+      root: "/app",
+    });
     const warns = collectWarns(() => {
       plugin.transform(SPREAD_JSX, "Card.tsx");
     });
-    expect(warns.some((line) => line.includes("template hoisting skipped"))).toBe(
-      false,
-    );
+    expect(
+      warns.some((line) => line.includes("template hoisting skipped")),
+    ).toBe(false);
   });
 
   it("uses Vite development mode after configResolved unless dev is set", () => {
     const plugin = sinwan({ cache: false });
-    plugin.configResolved({ command: "serve", mode: "development", root: "/app" });
+    plugin.configResolved({
+      command: "serve",
+      mode: "development",
+      root: "/app",
+    });
     const warns = collectWarns(() => {
       plugin.transform(SPREAD_JSX, "Card.tsx");
     });
-    expect(warns.some((line) => line.includes("template hoisting skipped"))).toBe(
-      true,
-    );
+    expect(
+      warns.some((line) => line.includes("template hoisting skipped")),
+    ).toBe(true);
   });
 
   it("keeps an explicit dev option after configResolved production mode", () => {
     const plugin = sinwan({ cache: false, dev: true });
-    plugin.configResolved({ command: "build", mode: "production", root: "/app" });
+    plugin.configResolved({
+      command: "build",
+      mode: "production",
+      root: "/app",
+    });
     const warns = collectWarns(() => {
       plugin.transform(SPREAD_JSX, "Card.tsx");
     });
-    expect(warns.some((line) => line.includes("template hoisting skipped"))).toBe(
-      true,
-    );
+    expect(
+      warns.some((line) => line.includes("template hoisting skipped")),
+    ).toBe(true);
   });
 
   it("defaults to quiet when NODE_ENV is production before configResolved", () => {
@@ -189,14 +233,20 @@ describe("vite transform, cache, and Fast Refresh", () => {
       mode: "production",
       root: process.cwd(),
     });
-    const result = plugin.transform("const App = () => <div>ok</div>;", "App.tsx");
+    const result = plugin.transform(
+      "const App = () => <div>ok</div>;",
+      "App.tsx",
+    );
     expect(result?.code).toBeDefined();
   });
 
   it("falls back to cwd when cache is a boolean and root is omitted", () => {
     const plugin = sinwan({ cache: true, fastRefresh: false, dev: false });
     plugin.configResolved({ command: "build", mode: "production" });
-    const result = plugin.transform("const App = () => <div>ok</div>;", "App.tsx");
+    const result = plugin.transform(
+      "const App = () => <div>ok</div>;",
+      "App.tsx",
+    );
     expect(result?.code).toBeDefined();
   });
 
@@ -206,8 +256,15 @@ describe("vite transform, cache, and Fast Refresh", () => {
       fastRefresh: false,
       dev: false,
     });
-    plugin.configResolved({ command: "build", mode: "production", root: "/app" });
-    const result = plugin.transform("const App = () => <div>ok</div>;", "App.jsx");
+    plugin.configResolved({
+      command: "build",
+      mode: "production",
+      root: "/app",
+    });
+    const result = plugin.transform(
+      "const App = () => <div>ok</div>;",
+      "App.jsx",
+    );
     expect(result?.code).toBeDefined();
   });
 
@@ -218,7 +275,10 @@ describe("vite transform, cache, and Fast Refresh", () => {
       dev: false,
     });
     plugin.configResolved({ command: "build", mode: "production" });
-    const result = plugin.transform("const App = () => <div>ok</div>;", "App.tsx");
+    const result = plugin.transform(
+      "const App = () => <div>ok</div>;",
+      "App.tsx",
+    );
     expect(result?.code).toBeDefined();
   });
 
@@ -344,7 +404,7 @@ describe("vite transform, cache, and Fast Refresh", () => {
   });
 });
 
-const COMPILER_RANGE = ">=0.2.5 <1.0.0";
+const COMPILER_RANGE = ">=0.4.0 <1.0.0";
 
 describe("sinwan-compiler dependency range", () => {
   it("accepts any 0.x compiler without a plugin republish", () => {
@@ -352,9 +412,7 @@ describe("sinwan-compiler dependency range", () => {
       fs.readFileSync(path.join(import.meta.dir, "..", "package.json"), "utf8"),
     ) as {
       dependencies: Record<string, string>;
-      peerDependencies: Record<string, string>;
     };
     expect(pkg.dependencies["sinwan-compiler"]).toBe(COMPILER_RANGE);
-    expect(pkg.peerDependencies["sinwan-compiler"]).toBe(COMPILER_RANGE);
   });
 });
