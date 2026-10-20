@@ -44,6 +44,18 @@ describe("sinwan vite plugin", () => {
     expect(plugin.config()).toEqual({ resolve: { dedupe: ["sinwan"] } });
   });
 
+  it("marks sinwan as a Rollup external for library builds", () => {
+    const plugin = sinwan({ peerExternal: true });
+    const config = plugin.config();
+    expect(config).toEqual({
+      build: {
+        rollupOptions: {
+          external: /^sinwan(\/|$)/,
+        },
+      },
+    });
+  });
+
   it("can be created with a custom cache root", () => {
     const plugin = sinwan({
       cache: { root: "/project", tsConfigPath: "/project/tsconfig.json" },
@@ -404,10 +416,10 @@ describe("vite transform, cache, and Fast Refresh", () => {
   });
 });
 
-const COMPILER_RANGE = ">=0.4.0 <1.0.0";
+const COMPILER_RANGE = ">=1.0.0 <2.0.0";
 
 describe("sinwan-compiler dependency range", () => {
-  it("accepts any 0.x compiler without a plugin republish", () => {
+  it("requires sinwan-compiler 1.x", () => {
     const pkg = JSON.parse(
       fs.readFileSync(path.join(import.meta.dir, "..", "package.json"), "utf8"),
     ) as {

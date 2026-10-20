@@ -10,11 +10,7 @@ bun add -d vite-plugin-sinwan
 
 ## Compiler updates
 
-The plugin depends on `sinwan-compiler` with `>=0.2.5 <1.0.0` and does not bundle it. Publishing a new 0.x compiler does **not** require a plugin release.
-
-- New installs resolve the newest compatible compiler automatically.
-- Existing apps keep a lockfile pin until they run `bun update sinwan-compiler`.
-- Republish this plugin only when the plugin API itself changes, or when `sinwan-compiler` reaches 1.0.
+The plugin depends on `sinwan-compiler` `>=1.0.0 <2.0.0` and does not bundle it. A new 1.x compiler is picked up by `bun update sinwan-compiler`. Publish a new plugin when its own API changes, or when the compiler reaches 2.0.
 
 ## Usage
 
@@ -49,6 +45,8 @@ sinwan({
   },
   // Plugin-free Fast Refresh (default: true, dev server only)
   fastRefresh: true,
+  // Library/publish builds: keep sinwan/* as Rollup externals
+  peerExternal: false,
 });
 ```
 
@@ -60,6 +58,7 @@ sinwan({
 | `analyze`          | `string`                        | `undefined`                  | Path to reactive-props metadata from `sinwan analyze` |
 | `cache`            | `boolean \| SinwanCacheOptions` | `false`                      | Enable incremental in-memory cross-file analysis      |
 | `fastRefresh`      | `boolean`                       | `true`                       | Inject per-component HMR boundaries (dev server only) |
+| `peerExternal`     | `boolean`                       | `false`                      | Library builds: leave `sinwan/*` as Rollup externals  |
 
 Enable `sinwan({ derivedLocals: true })` to promote eligible reactive `const` derivations inside component setup. This defaults to `false`; use compiler and runtime builds containing derived-local promotion and getter-attribute hydration support. `/* sinwan-snapshot */` preserves an intentional one-shot read. In development, the compiler diagnoses eligible JSX snapshots and setup `if` reads. Imported functions annotated with `/** @sinwan-pure */` JSDoc are also promoted; see the [`@sinwan-pure` JSDoc contract](../sinwan-compiler/docs/transform.md#sinwan-pure-jsdoc-contract) in the compiler docs.
 

@@ -45,6 +45,11 @@ export interface SinwanOptions {
    * otherwise `process.env.NODE_ENV !== "production"` when `sinwan()` runs.
    */
   dev?: boolean;
+  /**
+   * Library/publish builds: keep `sinwan` / `sinwan/*` as Rollup externals.
+   * Default false (apps): `resolve.dedupe` so linked packages share the app runtime.
+   */
+  peerExternal?: boolean;
 }
 
 /**
@@ -55,17 +60,19 @@ function defaultCompilerDev(): boolean {
   return process.env["NODE_ENV"] !== "production";
 }
 
+const SINWAN_PEER = /^sinwan(\/|$)/;
+
 const DEFAULT_SINWAN_OPTIONS: Required<
   Pick<
     SinwanOptions,
-    "hoist" | "explicitBindings" | "fastRefresh" | "analyze" | "cache"
+    "hoist" | "explicitBindings" | "fastRefresh" | "cache" | "peerExternal"
   >
 > = {
   hoist: true,
   explicitBindings: false,
   fastRefresh: true,
-  analyze: undefined as any,
   cache: true,
+  peerExternal: false,
 };
 
 /**
@@ -101,6 +108,15 @@ export function sinwan(options: SinwanOptions = {}) {
      * packages that depend on `sinwan` must share the app's runtime.
      */
     config() {
+      if (opts.peerExternal) {
+        return {
+          build: {
+            rollupOptions: {
+              external: SINWAN_PEER,
+            },
+          },
+        };
+      }
       return {
         resolve: {
           dedupe: ["sinwan"],
