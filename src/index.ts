@@ -62,6 +62,15 @@ function defaultCompilerDev(): boolean {
 
 const SINWAN_PEER = /^sinwan(\/|$)/;
 
+const JSX_IMPORT_SOURCE = "sinwan";
+
+/**
+ * Compiled templates import their DOM helpers from here. Vite's dependency
+ * scan only sees source imports, so without pre-bundling it the first page
+ * load discovers it late and triggers a full reload.
+ */
+const COMPILER_RUNTIME = "sinwan/renderer/web";
+
 const DEFAULT_SINWAN_OPTIONS: Required<
   Pick<
     SinwanOptions,
@@ -106,6 +115,9 @@ export function sinwan(options: SinwanOptions = {}) {
     /**
      * Same role as Vite's `resolve.dedupe` for React: linked `file:` / `link:`
      * packages that depend on `sinwan` must share the app's runtime.
+     *
+     * Apps also get the Sinwan JSX import source for Oxc and for the
+     * dependency scan, which reads neither this plugin nor a `jsconfig.json`.
      */
     config() {
       if (opts.peerExternal) {
@@ -120,6 +132,15 @@ export function sinwan(options: SinwanOptions = {}) {
       return {
         resolve: {
           dedupe: ["sinwan"],
+        },
+        oxc: {
+          jsx: { importSource: JSX_IMPORT_SOURCE },
+        },
+        optimizeDeps: {
+          include: [COMPILER_RUNTIME],
+          rolldownOptions: {
+            transform: { jsx: { importSource: JSX_IMPORT_SOURCE } },
+          },
         },
       };
     },

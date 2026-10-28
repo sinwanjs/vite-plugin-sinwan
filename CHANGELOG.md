@@ -2,6 +2,15 @@
 
 All notable changes to **vite-plugin-sinwan** are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com) and vite-plugin-sinwan adheres to [Semantic Versioning](https://semver.org).
 
+## [1.0.1] — Vite dependency scan
+
+### Fixed
+
+- **Dependency scan in JavaScript apps**: Vite's dependency scan ignores `oxc.jsx.importSource` and `jsconfig.json`, so every clean `vite` start in a `.jsx` app failed with `Failed to run dependency scan … react/jsx-dev-runtime` and skipped pre-bundling. The plugin now sets the Sinwan JSX import source for both Oxc and `optimizeDeps.rolldownOptions` (Vite 8).
+- **Full reload on the first dev visit**: compiled templates import `sinwan/renderer/web`, which the scan never sees, so Vite found it on the first request and reloaded the page. The plugin now adds it to `optimizeDeps.include`.
+
+Library builds (`peerExternal: true`) are unchanged.
+
 ## [1.0.0] — Compiler 1.0
 
 vite-plugin-sinwan 1.0.0 requires **sinwan-compiler 1.0.0**. The plugin still calls `transformJSX` and does not bundle the compiler. Generated code follows the 1.0 compiler: hoist helpers import `sinwan/renderer/web`, and `createStore` / `createMutable` are recognized from `sinway`.

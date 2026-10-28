@@ -41,7 +41,16 @@ describe("sinwan vite plugin", () => {
     expect(typeof plugin.configResolved).toBe("function");
     expect(typeof plugin.config).toBe("function");
     expect(typeof plugin.transform).toBe("function");
-    expect(plugin.config()).toEqual({ resolve: { dedupe: ["sinwan"] } });
+    expect(plugin.config()).toEqual({
+      resolve: { dedupe: ["sinwan"] },
+      oxc: { jsx: { importSource: "sinwan" } },
+      optimizeDeps: {
+        include: ["sinwan/renderer/web"],
+        rolldownOptions: {
+          transform: { jsx: { importSource: "sinwan" } },
+        },
+      },
+    });
   });
 
   it("marks sinwan as a Rollup external for library builds", () => {
