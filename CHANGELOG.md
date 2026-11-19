@@ -2,6 +2,25 @@
 
 All notable changes to **vite-plugin-sinwan** are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com) and vite-plugin-sinwan adheres to [Semantic Versioning](https://semver.org).
 
+## [1.1.0] — `<Img>` on Vite running on Bun
+
+### Added
+
+- **`<Img>` (`sinwan/image`) with Vite on Bun** (`bunx --bun vite`, `bunx --bun vite build`). When Vite runs on Bun, the plugin compiles `<Img>` with `images: { host: "bun" }` and uses `sinwan-compiler/image` (Bun's native `Bun.Image`).
+  - **Build**: `?sinwan-img=` imports load as image modules, and their optimized files are emitted with `this.emitFile`, so Vite hashes them and applies `base` and `assetsDir`.
+  - **Dev**: optimized files are served from the content-addressed cache at `<base>@sinwan-img/<hash>.<ext>` (immutable). They do not go through Vite's static server, which does not reliably serve the `.sinwan/` dot directory. Source images are watched.
+  - **Runtime images**: the dev server and `vite preview` mount `createImageHandler` at `images.handlerPath` (default `/_sinwan/image`) through a connect-to-fetch adapter.
+  - **`images` option**: `publicDir` (default: Vite's), `cacheDir`, sizes, quality, `remotePatterns` and `handlerPath`.
+- **Vite on Node**: `<Img>` usages and `sinwan/image` / `?sinwan-img=` imports throw `BunOnlyImageError` with a `bunx --bun vite` hint. There is no fallback encoder.
+
+### Fixed
+
+- `enforce` is typed as `"pre"` (it was widened to `string`), so `const plugin: Plugin = sinwan()` type-checks.
+
+### Changed
+
+- **`sinwan-compiler` dependency**: `>=1.3.0 <2.0.0`.
+
 ## [1.0.1] — Vite dependency scan
 
 ### Fixed

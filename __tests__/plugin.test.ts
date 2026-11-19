@@ -425,7 +425,7 @@ describe("vite transform, cache, and Fast Refresh", () => {
   });
 });
 
-const COMPILER_RANGE = ">=1.0.0 <2.0.0";
+const COMPILER_RANGE = ">=1.3.0 <2.0.0";
 
 describe("sinwan-compiler dependency range", () => {
   it("requires sinwan-compiler 1.x", () => {

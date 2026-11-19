@@ -1,5 +1,27 @@
-import { transformJSX, AnalyzerCache } from "sinwan-compiler";
+import {
+  transformJSX,
+  AnalyzerCache,
+  BunOnlyImageError,
+  IMAGE_QUERY_PATTERN,
+} from "sinwan-compiler";
+import { hasBunImage, resolveImageConfig, type ImageConfig } from "sinwan-compiler/image";
 import { injectComponentHmr } from "./compiler/hmr";
+import {
+  loadImage,
+  mountDevImages,
+  mountPreviewImages,
+  resolveImageImport,
+  type ImagePluginContext,
+  type MiddlewareServer,
+  type SinwanViteImageOptions,
+} from "./images";
+
+export {
+  DEV_IMAGE_SEGMENT,
+  IMAGE_FILE_ID_PREFIX,
+  IMAGE_ID_PREFIX,
+  type SinwanViteImageOptions,
+} from "./images";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -50,6 +72,14 @@ export interface SinwanOptions {
    * Default false (apps): `resolve.dedupe` so linked packages share the app runtime.
    */
   peerExternal?: boolean;
+  /**
+   * `<Img>` (`sinwan/image`) when Vite runs on Bun (`bunx --bun vite`):
+   * `publicDir` (default: Vite's), `cacheDir` (default `.sinwan/images`),
+   * sizes, quality, remote sources and `handlerPath` (default
+   * `/_sinwan/image`) of the on-demand handler mounted in dev and preview.
+   * On Node, any `<Img>` fails with a `bunx --bun vite` hint.
+   */
+  images?: SinwanViteImageOptions;
 }
 
 /**
@@ -70,6 +100,9 @@ const JSX_IMPORT_SOURCE = "sinwan";
  * load discovers it late and triggers a full reload.
  */
 const COMPILER_RUNTIME = "sinwan/renderer/web";
+
+/** `<Img>`: refused when Vite runs on Node. */
+const IMAGE_MODULE = "sinwan/image";
 
 const DEFAULT_SINWAN_OPTIONS: Required<
   Pick<
@@ -108,9 +141,15 @@ export function sinwan(options: SinwanOptions = {}) {
   // Optional incremental cross-file analyzer for dev/HMR.
   let cache: AnalyzerCache | null = null;
 
+  // <Img> runs only when Vite itself runs on Bun (`bunx --bun vite`).
+  const imagesOnBun = hasBunImage();
+  const { handlerPath, ...imageOptions } = options.images ?? {};
+  let imageConfig: ImageConfig = resolveImageConfig(imageOptions);
+  let base = "/";
+
   return {
     name: "sinwan",
-    enforce: "pre",
+    enforce: "pre" as const,
 
     /**
      * Same role as Vite's `resolve.dedupe` for React: linked `file:` / `link:`
@@ -148,6 +187,12 @@ export function sinwan(options: SinwanOptions = {}) {
     configResolved(config: any) {
       isServe = config?.command === "serve";
       projectRoot = config?.root;
+      base = typeof config?.base === "string" ? config.base : "/";
+      imageConfig = resolveImageConfig({
+        root: projectRoot,
+        ...(typeof config?.publicDir === "string" && config.publicDir !== "" ? { publicDir: config.publicDir } : {}),
+        ...imageOptions,
+      });
       if (explicitDev === undefined && typeof config?.mode === "string") {
         compilerDev = config.mode !== "production";
       }
@@ -177,6 +222,34 @@ export function sinwan(options: SinwanOptions = {}) {
       }
     },
 
+    /**
+     * `<Img>` images: on Bun, `?sinwan-img=` and `sinwan-img-file:` imports
+     * become virtual modules. On Node there is no `Bun.Image` and no fallback,
+     * so importing `sinwan/image` or an `<Img>` asset fails here.
+     */
+    resolveId(this: ImagePluginContext, id: string, importer?: string) {
+      if (!imagesOnBun) {
+        if (id === IMAGE_MODULE || IMAGE_QUERY_PATTERN.test(id)) {
+          throw new BunOnlyImageError(`Vite (running on Node) tried to resolve "${id}". Start Vite with \`bunx --bun vite\`.`);
+        }
+        return null;
+      }
+      return resolveImageImport(this, id, importer, imageConfig);
+    },
+
+    load(this: ImagePluginContext, id: string) {
+      if (!imagesOnBun) return null;
+      return loadImage(this, id, imageConfig, { serve: isServe, base });
+    },
+
+    configureServer(server: MiddlewareServer) {
+      if (imagesOnBun) mountDevImages(server, imageConfig, handlerPath);
+    },
+
+    configurePreviewServer(server: MiddlewareServer) {
+      if (imagesOnBun) mountPreviewImages(server, imageConfig, handlerPath);
+    },
+
     transform(code: string, id: string) {
       let result: { code: string; map?: any } | null = null;
       if (/\.[tj]sx$/.test(id)) {
@@ -191,6 +264,7 @@ export function sinwan(options: SinwanOptions = {}) {
           analyze: opts.analyze,
           analyzeMetadata: cache ? cache.reactiveProps : undefined,
           resolveImport: cache ? cache.resolve : undefined,
+          images: { host: imagesOnBun ? "bun" : "vite" },
         });
       }
 
