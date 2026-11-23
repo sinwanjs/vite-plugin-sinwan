@@ -3,6 +3,9 @@ import {
   AnalyzerCache,
   BunOnlyImageError,
   IMAGE_QUERY_PATTERN,
+  formatDiagnostic,
+  type DiagnosticHandler,
+  type SinwanDiagnostic,
 } from "sinwan-compiler";
 import { hasBunImage, resolveImageConfig, type ImageConfig } from "sinwan-compiler/image";
 import { injectComponentHmr } from "./compiler/hmr";
@@ -80,7 +83,52 @@ export interface SinwanOptions {
    * On Node, any `<Img>` fails with a `bunx --bun vite` hint.
    */
   images?: SinwanViteImageOptions;
+  /**
+   * Receives compiler diagnostics (`SW1xx`) for your source files; files under
+   * `node_modules` are skipped. The lint rules run only with `dev`. Default:
+   * Vite's `this.warn` with the file and location.
+   */
+  onDiagnostic?: DiagnosticHandler;
 }
+
+/** The part of Vite's transform context the plugin uses to report warnings. */
+interface WarnContext {
+  warn: (warning: {
+    message: string;
+    id: string;
+    loc: { file: string; line: number; column: number };
+  }) => void;
+}
+
+function hasWarn(context: object | undefined): context is WarnContext {
+  return (
+    context !== undefined &&
+    "warn" in context &&
+    typeof context.warn === "function"
+  );
+}
+
+/** Report through Vite (0-based column), or print when there is no context. */
+function warnThrough(
+  context: object | undefined,
+  diagnostic: SinwanDiagnostic,
+): void {
+  if (hasWarn(context)) {
+    context.warn({
+      message: `${diagnostic.code}: ${diagnostic.message}\n  ${diagnostic.hint}`,
+      id: diagnostic.file,
+      loc: {
+        file: diagnostic.file,
+        line: diagnostic.line,
+        column: diagnostic.column - 1,
+      },
+    });
+  } else {
+    console.warn(formatDiagnostic(diagnostic));
+  }
+}
+
+function ignoreDiagnostic(): void {}
 
 /**
  * Bracket access so Bun.build cannot fold `process.env.NODE_ENV` into `true`
@@ -250,7 +298,7 @@ export function sinwan(options: SinwanOptions = {}) {
       if (imagesOnBun) mountPreviewImages(server, imageConfig, handlerPath);
     },
 
-    transform(code: string, id: string) {
+    transform(this: object | undefined, code: string, id: string) {
       let result: { code: string; map?: any } | null = null;
       if (/\.[tj]sx$/.test(id)) {
         if (cache) {
@@ -265,6 +313,10 @@ export function sinwan(options: SinwanOptions = {}) {
           analyzeMetadata: cache ? cache.reactiveProps : undefined,
           resolveImport: cache ? cache.resolve : undefined,
           images: { host: imagesOnBun ? "bun" : "vite" },
+          onDiagnostic: id.includes("/node_modules/")
+            ? ignoreDiagnostic
+            : (opts.onDiagnostic ??
+              ((diagnostic) => warnThrough(this, diagnostic))),
         });
       }
 

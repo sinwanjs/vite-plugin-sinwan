@@ -2,6 +2,17 @@
 
 All notable changes to **vite-plugin-sinwan** are documented in this file. The format follows [Keep a Changelog](https://keepachangelog.com) and vite-plugin-sinwan adheres to [Semantic Versioning](https://semver.org).
 
+## [1.2.0] — Compiler diagnostics
+
+### Added
+
+- **Compiler diagnostics through Vite** (sinwan-compiler 1.4): JSX that compiles but misbehaves (`SW101` zero-argument function props, `SW102` a new object in `Show`/`Match`/`Key` `when`, `SW103` `value={undefined}`, plus the existing hoisting, derived-local and style warnings) is reported with `this.warn`, with the file and location, so Vite shows it like its own warnings. The lint rules run only with `dev`; files under `node_modules` are skipped.
+- **`onDiagnostic` option**: receives each diagnostic instead of reporting it.
+
+### Changed
+
+- Requires `sinwan-compiler` `>=1.4.0 <2.0.0`.
+
 ## [1.1.0] — `<Img>` on Vite running on Bun
 
 ### Added
